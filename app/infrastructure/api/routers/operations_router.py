@@ -9,7 +9,7 @@ import shutil
 from app.infrastructure.celery.worker import celery_app
 
 router = APIRouter(prefix="/api/v1/operaciones", tags=["Operaciones"])
-TEMP_UPLOADS_DIR = "temp_uploads"
+TEMP_UPLOADS_DIR = "/tmp"
 
 @router.post("/", status_code=202, summary="Crear una nueva operación de procesamiento")
 async def create_operation(
