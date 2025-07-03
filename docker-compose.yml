@@ -1,0 +1,46 @@
+# docker-compose.yml (Versión Final con Cloud SQL Proxy)
+services:
+  rabbitmq:
+    image: "rabbitmq:3.13-management-alpine"
+    # ... (sin cambios)
+    networks: ["app-network"]
+
+  cloud-sql-proxy:
+    image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.8.0
+    command:
+      # Esta línea es la más importante. Abre el proxy a otros contenedores.
+      - "--address=0.0.0.0" 
+      - "--port=5432"
+      - "operaciones-peru:southamerica-west1:sqlcapitalexpress"
+      - "--credentials-file=/secrets/gcp-credentials.json"
+    volumes:
+      - ./gcp-credentials.json:/secrets/gcp-credentials.json:ro
+    networks:
+      - app-network
+
+  api:
+    container_name: fastapi_api
+    build: .
+    command: gunicorn -k uvicorn.workers.UvicornWorker -w 4 -b 0.0.0.0:8000 main:app
+    volumes: [".:/app", "temp_uploads:/app/temp_uploads"]
+    ports: ["8000:8000"]
+    env_file: .env
+    networks: ["app-network"]
+    depends_on: [rabbitmq, cloud-sql-proxy] # Depende del proxy
+
+  worker:
+    container_name: celery_worker
+    build: .
+    command: celery -A app.infrastructure.celery.worker.celery_app worker --loglevel=info -c 2
+    volumes: [".:/app", "temp_uploads:/app/temp_uploads"]
+    env_file: .env
+    networks: ["app-network"]
+    depends_on: [api, rabbitmq, cloud-sql-proxy] # También depende del proxy
+
+volumes:
+  rabbitmq_data: {}
+  temp_uploads: {}
+
+networks:
+  app-network:
+    driver: bridge

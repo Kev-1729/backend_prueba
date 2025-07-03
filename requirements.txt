@@ -1,0 +1,23 @@
+# Framework de API
+fastapi
+uvicorn
+gunicorn
+
+# Procesamiento asíncrono y Broker
+celery
+pika
+
+# Base de Datos
+sqlalchemy
+psycopg2-binary
+celery-pubsub
+# APIs y Utilidades
+google-api-python-client
+google-auth-httplib2
+google-auth-oauthlib
+requests
+python-trello
+python-dotenv
+python-multipart
+pandas
+lxml
